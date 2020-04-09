@@ -1,0 +1,13 @@
+.idea/
+*.iml
+**/target/
+**/bin
+*.zip
+
+# Terraform
+**/.terraform
+**/terraform.tfplan
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/terraform.tfstate.d
+**/*.auto.tfvars

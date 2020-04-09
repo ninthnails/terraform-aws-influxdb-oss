@@ -1,0 +1,197 @@
+---
+- name: Setup InfluxDB OSS
+  hosts: all
+  become: yes
+  gather_facts: yes
+  vars:
+    admin_username: admin
+    aws_region: us-east-1
+    data_base_path: /var/lib/influxdb
+    data_stores:
+      data: sdf
+      wal: sdg
+    storage_type: root
+    swap_file_path: /var/swap/file01
+  tasks:
+    - name: Copy sysctl config
+      copy:
+        src: sysctl.d/
+        dest: /etc/sysctl.d/
+        owner: root
+        group: root
+        mode: 0440
+
+    - name: Configure security limits
+      pam_limits:
+        domain: influxdb
+        dest: /etc/security/limits.d/80-influxdb.conf
+        limit_item: "{{ item.item }}"
+        limit_type: "{{ item.type }}"
+        value: "{{ item.value }}"
+      loop:
+        - { item: as,      type: soft, value: unlimited }
+        - { item: as,      type: hard, value: unlimited }
+        - { item: core,    type: soft, value: unlimited }
+        - { item: core,    type: hard, value: unlimited }
+        - { item: nofile,  type: soft, value: 65536 }
+        - { item: nofile,  type: hard, value: 65536 }
+        - { item: memlock, type: soft, value: unlimited }
+        - { item: memlock, type: hard, value: unlimited }
+
+    - name: Swap detection
+      set_fact:
+        swap_available: "{{ ansible_swaptotal_mb > 0 }}"
+
+    - name: Create swap directory
+      file:
+        path: "{{ swap_file_path | dirname }}"
+        state: directory
+        owner: root
+        mode: 0700
+
+    - name: Allocate swap file
+      command: "/bin/fallocate -l 2G {{ swap_file_path }}"
+      args:
+        creates: "{{ swap_file_path }}"
+      when: not swap_available
+      register: swap_creation
+
+    - name: Set swap file permissions
+      file:
+        path: "{{ swap_file_path }}"
+        owner: root
+        mode: 0600
+      when: swap_creation.changed
+
+    - name: Make swap file system
+      command: "/sbin/mkswap {{ swap_file_path }}"
+      when: swap_creation.changed
+
+    - name: Enable swap file
+      command: "/sbin/swapon {{ swap_file_path }}"
+      when: swap_creation.changed
+
+    - name: Configure swap file mounting
+      lineinfile:
+        line: "{{ swap_file_path }} swap swap defaults 0 0"
+        path: /etc/fstab
+      when: swap_creation.changed
+
+    - name: Install Amazon CloudWatch Agent package
+      package:
+        name: "https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm"
+
+    - name: Install InfluxDB repository
+      yum_repository:
+        description: InfluxDB Repository
+        name: influxdb
+        baseurl: "https://repos.influxdata.com/centos/{{ '7' if ansible_distribution_version == '2' else '$releasever' }}/$basearch/stable"
+        gpgcheck: yes
+        gpgkey: https://repos.influxdata.com/influxdb.key
+        owner: root
+        mode: 0644
+
+    - name: Install InfluxDB
+      package:
+        name: influxdb
+        state: latest
+
+    - name: Mount EBS volumes
+      when: storage_type == "ebs"
+      block:
+        - name: Wait for devices to exist
+          wait_for:
+            path: "/dev/{{ item.value }}"
+            state: present
+          loop: "{{ data_stores | dict2items }}"
+          when: storage_type == "ebs"
+
+        - name: Make filesystem on device
+          filesystem:
+            dev: "/dev/{{ item.value }}"
+            fstype: xfs
+          loop: "{{ data_stores | dict2items }}"
+          register: makefs_result
+
+        - name: Create mount target directories
+          file:
+            path: "{{ data_base_path }}/{{ item.value }}"
+            state: directory
+            owner: root
+          loop: "{{ data_stores | dict2items }}"
+
+        - name: Mount targets
+          mount:
+            fstype: xfs
+            opts: defaults,auto,nouser,noatime,largeio
+            path: "{{ data_base_path }}/{{ item.value }}"
+            src: "/dev/{{ item.value }}"
+            state: mounted
+          loop: "{{ data_stores | dict2items }}"
+
+        - name: Resize filesystems
+          filesystem:
+            dev: "/dev/{{ item.value }}"
+            fstype: xfs
+            resizefs: yes
+          loop: "{{ data_stores | dict2items }}"
+          when: makefs_result is not changed
+
+        - name: Update variables
+          set_fact:
+            influxdb_data_path: "{{ data_base_path }}/{{ data_stores.data }}/data"
+            influxdb_meta_path: "{{ data_base_path }}/{{ data_stores.data }}/meta"
+            influxdb_wal_path: "{{ data_base_path }}/{{ data_stores.wal }}/wal"
+
+        - name: Create InfluxDB directories
+          file:
+            path: "{{ item }}"
+            state: directory
+            owner: influxdb
+            group: influxdb
+          loop:
+            - "{{ influxdb_data_path }}"
+            - "{{ influxdb_meta_path }}"
+            - "{{ influxdb_wal_path }}"
+
+    - name: Configure InfluxDB service
+      template:
+        backup: yes
+        src: etc/influxdb/influxdb.conf
+        dest: /etc/influxdb/influxdb.conf
+        owner: root
+        mode: 0644
+
+    - name: Start InfluxDB service
+      service:
+        name: influxdb
+        enabled: yes
+        state: started
+
+    - name: Wait for InfluxDB to be up
+      wait_for:
+        port: 8086
+
+    - name: Authentication check
+      uri:
+        url: http://localhost:8086/query?q=SHOW+USERS
+        status_code: [403, 401]
+      register: auth_check
+
+    - name: Get admin password from Parameter Store
+      command: "/usr/bin/aws --region {{ aws_region }} ssm get-parameter --name '{{ admin_password | regex_replace('parameter/') }}' --with-decryption --query Parameter.Value --output text"
+      register: parameter_password
+      when: auth_check.status != 401 and admin_password is match('parameter/.*')
+
+    - name: Get admin password from Secrets Manager
+      command: "/usr/bin/aws --region {{ aws_region }} secretsmanager get-secret-value --secret-id '{{ admin_password | regex_replace('secret/') }}' --query SecretString --output text"
+      register: secret_password
+      when: auth_check.status != 401 and admin_password is match('secret/*')
+
+    - name: Create admin user
+      command: /usr/bin/influx -execute "CREATE USER {{ admin_username }} WITH PASSWORD '{{ password }}' WITH ALL PRIVILEGES"
+      vars:
+        password: "{{ parameter_password.stdout if parameter_password is changed else ( secret_password.stdout if secret_password is changed else admin_password) }}"
+      no_log: True
+      when: auth_check.status != 401
+
