@@ -225,7 +225,7 @@ data "aws_iam_policy_document" "secrets-manager" {
     ]
     effect = "Allow"
     resources = [
-      "arn:aws:secretsmanager:${data.aws_region.this.name}:${data.aws_caller_identity.this.account_id}:${var.admin_password}"
+      "arn:aws:secretsmanager:${data.aws_region.this.name}:${data.aws_caller_identity.this.account_id}:secret:${regex("secrets/(.*)", var.admin_password)[0]}"
     ]
   }
 }
