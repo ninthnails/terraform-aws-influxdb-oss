@@ -3,7 +3,7 @@
 Terraform example module which creates an InfluxDB server for development, with no EBS backed data storage.
 
 ## Usage
-If you already meeting the requirements, create an auto variables file such as `example.auto.tfvars` with at minimum these.
+If you already meet the requirements, create an auto variables file such as `example.auto.tfvars` with at minimum these.
 Otherwise see further below for more instructions.
 ```hcl-terraform
 admin_password = "parameter/influxdb-admin-password"
@@ -21,7 +21,7 @@ terraform plan -out terraform.tfplan
 terraform apply terraform.tfplan
 ```
 
-When you are down, delete the resources.
+When you are done, delete the resources.
 ```shell script
 terraform destroy
 ```
