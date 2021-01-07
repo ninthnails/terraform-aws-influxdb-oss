@@ -7,4 +7,5 @@ export ANSIBLE_PYTHON_INTERPRETER=$(/bin/command -v python2.7)
 -e "admin_username=${admin_username}" \
 -e "admin_password=${admin_password}" \
 -e "aws_region=${region}" \
--e "storage_type=${storage_type}"
+-e "storage_type=${storage_type}" \
+-e "flux_enabled=${flux_enabled}"
