@@ -12,6 +12,7 @@
       wal: sdg
     storage_type: root
     swap_file_path: /var/swap/file01
+    flux_enabled: false
   tasks:
     - name: Copy sysctl config
       copy:
