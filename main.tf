@@ -304,6 +304,7 @@ data "template_file" "user_data" {
     admin_password  = var.admin_password
     storage_type    = var.storage_type
     region          = data.aws_region.this.name
+    flux_enabled    = var.flux_enabled
     setup_dist      = "s3://${aws_s3_bucket_object.setup.bucket}/${aws_s3_bucket_object.setup.key}"
     setup_dist_etag = aws_s3_bucket_object.setup.etag
   }

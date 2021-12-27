@@ -122,3 +122,8 @@ variable "wal_storage_volume_type" {
   default     = "gp2"
   description = "The type of EBS volume used for the InfluxDB WAL (Write Ahead Log) store."
 }
+
+variable "flux_enabled" {
+  default     = false
+  description = "If true, flux will be enabled."
+}
