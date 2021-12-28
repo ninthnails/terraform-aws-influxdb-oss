@@ -108,7 +108,7 @@ resource "aws_security_group_rule" "ingress-api" {
 }
 
 resource "aws_security_group_rule" "ingress-admin" {
-  description       = "Admin"
+  description       = "RPC Admin"
   type              = "ingress"
   security_group_id = aws_security_group.private.id
   cidr_blocks = [

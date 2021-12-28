@@ -93,9 +93,14 @@
         mode: 0644
 
     - name: Install InfluxDB
-      package:
-        name: influxdb
-        state: latest
+      yum:
+        name: 'influxdb-1.7*'
+        state: present
+        lock_timeout: 60
+      register: influxdb_install_result
+      retries: 3
+      delay: 10
+      until: influxdb_install_result is succeeded
 
     - name: Mount EBS volumes
       when: storage_type == "ebs"
