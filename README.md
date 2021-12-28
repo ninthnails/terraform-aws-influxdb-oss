@@ -17,7 +17,7 @@ Note InfluxDB OSS doesn't support clustering and as such, the nodes created are 
 ```hcl
 module "influxdb" {
   source = "ninthnails/influxdb-oss/aws"
-  version = "1.0.2"
+  version = "1.1.0"
   admin_username = "admin"
   admin_password = "parameter/influxdb-admin-password"
   data_storage_volume_size = 350
@@ -45,7 +45,7 @@ module "influxdb" {
 
 | Name      | Version |
 |-----------|---------|
-| terraform | >= 0.13 |
+| terraform | >= 0.15 |
 | aws       | ~> 2.56 |
 | archive   | ~> 1.3  |
 | template  | ~> 2.1  |
