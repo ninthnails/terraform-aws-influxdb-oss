@@ -22,7 +22,7 @@ data "aws_kms_key" "ebs" {
 
 data "aws_ami" "amzn2" {
   count      = local.is_image_id_provided ? 0 : 1
-  name_regex = "amzn2-ami-hvm-2.0.2020*"
+  name_regex = "amzn2-ami-hvm-2.0.2021*"
   owners     = ["amazon"]
   filter {
     name   = "architecture"
@@ -30,7 +30,7 @@ data "aws_ami" "amzn2" {
   }
   filter {
     name   = "description"
-    values = ["Amazon Linux 2 AMI 2.0.2020* x86_64 HVM gp2"]
+    values = ["Amazon Linux 2 AMI 2.0.2021* x86_64 HVM gp2"]
   }
   filter {
     name   = "ena-support"
