@@ -22,17 +22,8 @@ variable "vpc_id" {
 #################
 # Providers
 #################
-provider "archive" {
-  version = "~> 1.3.0"
-}
-
 provider "aws" {
   region = var.aws_region
-  version = "~> 2.56"
-}
-
-provider "template" {
-  version = "~> 2.1"
 }
 
 #################

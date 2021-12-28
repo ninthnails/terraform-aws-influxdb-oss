@@ -40,4 +40,12 @@ module "influxdb" {
 ## Examples
 * [Single Node for Development](examples/single-dev): A simple node that store data on the root volume.
 * [Single Node with EBS](examples/single-ebs): A simple node with EBS volumes.
- 
+
+## Requirements
+
+| Name      | Version |
+|-----------|---------|
+| terraform | >= 0.13 |
+| aws       | ~> 2.56 |
+| archive   | ~> 1.3  |
+| template  | ~> 2.1  |

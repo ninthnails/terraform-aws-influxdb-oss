@@ -5,7 +5,7 @@ Terraform example module which creates an InfluxDB server for development, with 
 ## Usage
 If you already meet the requirements, create an auto variables file such as `example.auto.tfvars` with at minimum these.
 Otherwise see further below for more instructions.
-```hcl-terraform
+```hcl
 admin_password = "parameter/influxdb-admin-password"
 aws_region = "us-east-2"
 key_pair_name = "my-ssh-key-pair-name"
@@ -14,7 +14,7 @@ vpc_id = "vpc-05fbe87d7fea46d75"
 ```
 
 Then run Terraform as usual:
-```shell script
+```shell
 terraform workspace new lab
 terraform init
 terraform plan -out terraform.tfplan
@@ -22,15 +22,13 @@ terraform apply terraform.tfplan
 ```
 
 When you are done, delete the resources.
-```shell script
+```shell
 terraform destroy
 ```
 
 ### AWS System Manager Parameter Store
 This will create a parameter holding the password for the admin user.
-```shell script
+```shell
 aws --region us-east-2 ssm put-parameter --name "influxdb-admin-password" \
   --type SecureString --value CHANGE_IT
 ```
-
-

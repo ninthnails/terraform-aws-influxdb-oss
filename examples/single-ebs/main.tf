@@ -26,17 +26,8 @@ variable "vpc_id" {
 #################
 # Providers
 #################
-provider "archive" {
-  version = "~> 1.3.0"
-}
-
 provider "aws" {
   region = var.aws_region
-  version = "~> 2.56"
-}
-
-provider "template" {
-  version = "~> 2.1"
 }
 
 #################
@@ -51,7 +42,7 @@ module "influxdb" {
   instance_type = "t3a.micro"
   key_pair_name = var.key_pair_name
   nodes = 1
-  prefix = "example"
+  prefix = "ebs-example"
   private_subnet_ids = var.private_subnet_ids
   storage_type = "ebs"
   tags = {
