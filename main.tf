@@ -71,7 +71,7 @@ resource "aws_security_group" "private" {
   name_prefix = "${local.prefix}influxdb-private-"
   vpc_id      = var.vpc_id
   description = "Security group for InfluxDB"
-  tags        = merge(var.tags, map("Name", "${local.prefix}influxdb-private"))
+  tags        = merge(var.tags, {Name: "${local.prefix}influxdb-private"})
 }
 
 resource "aws_security_group_rule" "egress-all" {
@@ -184,7 +184,7 @@ data "aws_iam_policy_document" "assume" {
 resource "aws_iam_role" "node" {
   assume_role_policy = data.aws_iam_policy_document.assume.json
   name_prefix        = "${local.prefix}influxdb-"
-  tags               = merge(var.tags, map("Name", "${local.prefix}influxdb"))
+  tags               = merge(var.tags, {Name: "${local.prefix}influxdb"})
 }
 
 resource "aws_iam_instance_profile" "node" {
@@ -262,7 +262,7 @@ resource "aws_ebs_volume" "data" {
   kms_key_id        = data.aws_kms_key.ebs.arn
   size              = var.data_storage_volume_size
   type              = var.data_storage_volume_type
-  tags              = merge(var.tags, map("Name", "${local.prefix}influxdb-${format("%02d", count.index + 1)}-data"))
+  tags              = merge(var.tags, {Name: "${local.prefix}influxdb-${format("%02d", count.index + 1)}-data"})
   lifecycle {
     ignore_changes = [
       encrypted,
@@ -281,7 +281,7 @@ resource "aws_ebs_volume" "wal" {
   kms_key_id        = data.aws_kms_key.ebs.arn
   size              = var.wal_storage_volume_size
   type              = var.wal_storage_volume_type
-  tags              = merge(var.tags, map("Name", "${local.prefix}influxdb-${format("%02d", count.index + 1)}-wal"))
+  tags              = merge(var.tags, {Name: "${local.prefix}influxdb-${format("%02d", count.index + 1)}-wal"})
   lifecycle {
     ignore_changes = [
       encrypted,
@@ -328,7 +328,7 @@ resource "aws_instance" "node" {
     encrypted   = true
   }
   subnet_id = data.aws_subnet.private[count.index % length(data.aws_subnet.private)].id
-  tags      = merge(var.tags, map("Name", "${local.prefix}influxdb-${format("%02d", count.index + 1)}"))
+  tags      = merge(var.tags, {Name: "${local.prefix}influxdb-${format("%02d", count.index + 1)}"})
   user_data = local.is_image_id_provided ? var.ec2_user_data : data.template_file.user_data[0].rendered
   vpc_security_group_ids = [
     aws_security_group.private.id
@@ -344,7 +344,7 @@ resource "aws_network_interface" "static" {
     aws_security_group.private.id
   ]
   subnet_id = data.aws_subnet.private[count.index % length(data.aws_subnet.private)].id
-  tags      = merge(var.tags, map("Name", "${local.prefix}influxdb-${format("%02d", count.index + 1)}"))
+  tags      = merge(var.tags, {Name: "${local.prefix}influxdb-${format("%02d", count.index + 1)}"})
 }
 
 resource "aws_network_interface_attachment" "static" {
@@ -394,7 +394,7 @@ resource "aws_cloudwatch_metric_alarm" "reboot" {
   dimensions = {
     InstanceId = aws_instance.node[count.index].id
   }
-  tags = merge(var.tags, map("Name", "${local.prefix}influxdb-${format("%02d", count.index + 1)}-reboot"))
+  tags = merge(var.tags, {Name: "${local.prefix}influxdb-${format("%02d", count.index + 1)}-reboot"})
   lifecycle {
     create_before_destroy = true
   }
@@ -418,7 +418,7 @@ resource "aws_cloudwatch_metric_alarm" "recovery" {
   dimensions = {
     InstanceId = aws_instance.node[count.index].id
   }
-  tags = merge(var.tags, map("Name", "${local.prefix}influxdb-${format("%02d", count.index + 1)}-recovery"))
+  tags = merge(var.tags, {Name: "${local.prefix}influxdb-${format("%02d", count.index + 1)}-recovery"})
   lifecycle {
     create_before_destroy = true
   }
