@@ -17,7 +17,7 @@ Note InfluxDB OSS doesn't support clustering and as such, the nodes created are 
 ```hcl
 module "influxdb" {
   source = "ninthnails/influxdb-oss/aws"
-  version = "1.1.0"
+  version = "1.2.0"
   admin_username = "admin"
   admin_password = "parameter/influxdb-admin-password"
   data_storage_volume_size = 350
