@@ -14,6 +14,15 @@
     swap_file_path: /var/swap/file01
     flux_enabled: false
   tasks:
+    - name: Install Amazon SSM Agent package
+      package:
+        name: amazon-ssm-agent
+
+    - name: Enable Amazon SSM Agent service
+      service:
+        name: amazon-ssm-agent
+        enabled: yes
+
     - name: Copy sysctl config
       copy:
         src: sysctl.d/
