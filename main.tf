@@ -22,7 +22,7 @@ data "aws_kms_key" "ebs" {
 
 data "aws_ami" "amzn2" {
   count      = local.is_image_id_provided ? 0 : 1
-  name_regex = "amzn2-ami-hvm-2.0.2021*"
+  name_regex = "amzn2-ami-kernel-.*-hvm-2\\.0\\.2022.*"
   owners     = ["amazon"]
   filter {
     name   = "architecture"
@@ -30,7 +30,7 @@ data "aws_ami" "amzn2" {
   }
   filter {
     name   = "description"
-    values = ["Amazon Linux 2 AMI 2.0.2021* x86_64 HVM gp2"]
+    values = ["Amazon Linux 2 Kernel * AMI 2.0.2022* x86_64 HVM gp2"]
   }
   filter {
     name   = "ena-support"
@@ -128,7 +128,7 @@ resource "random_id" "s3" {
 
 resource "aws_s3_bucket" "source" {
   acl    = "private"
-  bucket = substr("${var.prefix}-image-${data.aws_region.this.name}-${random_id.s3.hex}", 0, 63)
+  bucket = substr("${var.prefix}-influxdb-oss-${data.aws_region.this.name}-${random_id.s3.hex}", 0, 63)
   region = data.aws_region.this.name
   server_side_encryption_configuration {
     rule {
@@ -248,6 +248,11 @@ resource "aws_iam_role_policy" "secrets-manager" {
   name_prefix = "secrets-manager-"
   policy      = data.aws_iam_policy_document.secrets-manager[0].json
   role        = aws_iam_role.node.id
+}
+
+resource "aws_iam_role_policy_attachment" "ssm" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  role = aws_iam_role.node.id
 }
 
 

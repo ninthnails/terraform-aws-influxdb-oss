@@ -33,7 +33,7 @@ module "influxdb" {
   source = "../../"
   admin_username = "admin"
   admin_password = "example"
-  instance_type = "t3a.micro"
+  instance_type = "t3a.small"
   key_pair_name = var.key_pair_name
   prefix = "example"
   private_subnet_ids = var.private_subnet_ids

@@ -39,7 +39,7 @@ module "influxdb" {
   admin_password = var.admin_password
   data_storage_volume_size = 4
   hosted_zone_id = var.hosted_zone_id
-  instance_type = "t3a.micro"
+  instance_type = "t3a.small"
   key_pair_name = var.key_pair_name
   nodes = 1
   prefix = "ebs-example"
